@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const mlRouter = require("./ml");
 const path = require('path');
 const JsonStore = require('./store');
 const AuthService = require('./auth');
@@ -80,10 +81,13 @@ router.post('/auth/logout', (req, res) => {
 });
 
 if (USE_API_PREFIX) {
-  app.use('/api', router);
+  app.use("/api", router);
+  app.use("/api", mlRouter); // ✅ add this
 } else {
-  app.use('/', router);
+  app.use("/", router);
+  app.use("/", mlRouter);
 }
+
 
 app.listen(PORT, () => {
   console.log(`API listening on http://localhost:${PORT}${USE_API_PREFIX ? '/api' : ''}`);
