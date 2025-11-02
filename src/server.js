@@ -82,7 +82,7 @@ router.post('/auth/logout', (req, res) => {
 
 if (USE_API_PREFIX) {
   app.use("/api", router);
-  app.use("/api", mlRouter); // ✅ add this
+app.use("/api/ml", mlRouter);
 } else {
   app.use("/", router);
   app.use("/", mlRouter);
