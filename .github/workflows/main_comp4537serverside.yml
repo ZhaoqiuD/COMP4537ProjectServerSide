@@ -107,4 +107,4 @@ jobs:
           app-name: 'COMP4537ServerSide'
           slot-name: 'Production'
           # Point to the zip downloaded from the build job
-          package: node-app/deploy.zip
+          package: deploy.zip
