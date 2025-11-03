@@ -7,23 +7,33 @@ const JsonStore = require('./store');
 const AuthService = require('./auth');
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
-const DEFAULT_ORIGINS = ['http://localhost:5500', 'http://127.0.0.1:5500', 'https://comp4537clientside.onrender.com'];
+const DEFAULT_ORIGINS = [
+  'http://localhost:5500',
+  'http://127.0.0.1:5500',
+  'https://comp4537clientside.onrender.com'
+];
 const CLIENT_ORIGINS_ENV = (process.env.CLIENT_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
 const ALLOWED_ORIGINS = CLIENT_ORIGINS_ENV.length ? CLIENT_ORIGINS_ENV : DEFAULT_ORIGINS;
-const USE_API_PREFIX = true; // keep /api prefix to match client default
+const USE_API_PREFIX = true;
 
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
+
+// ✅ Global CORS (applies before routers)
 const corsOptions = {
-  origin: function(origin, callback) {
-    if (!origin) return callback(null, true); // allow non-browser or same-origin
-    if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    const allowed = ALLOWED_ORIGINS.some(o => origin.startsWith(o));
+    if (allowed) return callback(null, true);
     return callback(new Error(`Not allowed by CORS: ${origin}`));
   },
-  credentials: true
+  credentials: true,
+  optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
+
+// ✅ Explicit preflight handling
 app.options('*', cors(corsOptions));
 
 const store = new JsonStore(path.join(__dirname, '..', 'data', 'db.json'));
@@ -33,6 +43,7 @@ const auth = new AuthService(store, {
 });
 auth.seedAdmin();
 
+// Routers
 const router = express.Router();
 
 router.post('/auth/register', (req, res) => {
@@ -51,9 +62,7 @@ router.post('/auth/login', (req, res) => {
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
   try {
     const { token, user } = auth.login(String(email).toLowerCase(), String(password));
-    // set httpOnly cookie for production-style flows
     res.cookie(auth.cookieName, token, auth.cookieOptions());
-    // also return token in JSON to simplify local dev across origins
     return res.status(200).json({ email: user.email, role: user.role, token });
   } catch (e) {
     return res.status(401).json({ error: e.message });
@@ -80,16 +89,23 @@ router.post('/auth/logout', (req, res) => {
   return res.status(200).json({ ok: true });
 });
 
+// ✅ Attach routers after CORS
 if (USE_API_PREFIX) {
   app.use("/api", router);
-app.use("/api/ml", mlRouter);
+  app.use("/api/ml", mlRouter);
 } else {
   app.use("/", router);
   app.use("/", mlRouter);
 }
 
+// ✅ Catch-all to ensure CORS on errors too
+app.use((req, res) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.status(404).send('Not Found');
+});
 
 app.listen(PORT, () => {
-  console.log(`API listening on http://localhost:${PORT}${USE_API_PREFIX ? '/api' : ''}`);
+  console.log(`✅ API listening on port ${PORT}${USE_API_PREFIX ? '/api' : ''}`);
   console.log(`CORS allowed origins: ${ALLOWED_ORIGINS.join(', ')}`);
 });
