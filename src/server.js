@@ -10,7 +10,7 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 const DEFAULT_ORIGINS = [
   'http://localhost:5500',
   'http://127.0.0.1:5500',
-  'https://comp4537clientside.onrender.com'
+  'https://comp4537projectclientside.onrender.com'
 ];
 const CLIENT_ORIGINS_ENV = (process.env.CLIENT_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
 const ALLOWED_ORIGINS = CLIENT_ORIGINS_ENV.length ? CLIENT_ORIGINS_ENV : DEFAULT_ORIGINS;
@@ -105,7 +105,7 @@ app.use((req, res) => {
   res.status(404).send('Not Found');
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ API listening on port ${PORT}${USE_API_PREFIX ? '/api' : ''}`);
   console.log(`CORS allowed origins: ${ALLOWED_ORIGINS.join(', ')}`);
 });
