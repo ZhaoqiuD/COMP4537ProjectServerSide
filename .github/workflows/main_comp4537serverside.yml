@@ -37,10 +37,10 @@ jobs:
 
       - name: Prepare Python requirements
         run: |
-        echo "torch" > requirements.txt
-        echo "torchvision" >> requirements.txt
-        echo "transformers" >> requirements.txt
-        echo "pillow" >> requirements.txt
+          echo "torch" > requirements.txt
+          echo "torchvision" >> requirements.txt
+          echo "transformers" >> requirements.txt
+          echo "pillow" >> requirements.txt
 
 
 
